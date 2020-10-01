@@ -1,0 +1,145 @@
+from collections import OrderedDict
+from scipy.spatial import distance as dist
+from imutils.video import FileVideoStream
+from imutils.video import VideoStream
+from imutils import face_utils
+import argparse
+import imutils
+import dlib
+import numpy as np
+import cv2
+
+
+ap = argparse.ArgumentParser()
+ap.add_argument("-sh", "--shape-predictor", required = True, help = "path to facial landmark predictor")
+args = vars(ap.parse_args())
+
+
+# Dictionary indexs of facial landmark
+FACIAL_LANDMARKS_IDXS = OrderedDict([
+    ("mouth", (48, 68)),
+    ("right_eyebrow", (17, 22)),
+    ("left_eyebrow", (22, 27)),
+    ("right_eye", (36, 42)),
+    ("left_eye", (42, 48)),
+    ("nose", (27, 36)),
+    ("jaw", (0, 17))
+    ])
+
+def turn_aspect_ratio(x1, x2, x3):
+    A = dist.euclidean(x1, x2)
+    B = dist.euclidean(x2, x3)
+
+    return A/B
+
+def open_mouth_detection(x1, x2, x3, x4):
+    A = dist.euclidean(x1, x2)
+    B = dist.euclidean(x3, x4)
+
+    return A/B
+
+def rect_to_bb(rect):
+    x = rect.left()
+    y = rect.top()
+    w = rect.right() - x
+    h = rect.bottom() - y
+
+    return (x, y, w, h)
+
+def shape_to_np(shape, dtype = "int"):
+    coords = np.zeros((68, 2), dtype = dtype)
+
+    for i in range(0, 68):
+        coords[i] = (shape.part(i).x, shape.part(i).y)
+
+    return coords
+
+cap = cv2.VideoCapture(0)
+
+event = "none"
+event2 = "none"
+
+detector = dlib.get_frontal_face_detector()
+predictor = dlib.shape_predictor(args["shape_predictor"])
+while True:
+
+    ret, frame = cap.read()
+    rname = imutils.resize(frame, width = 450)
+
+    gray = cv2.cvtColor(rname, cv2.COLOR_BGR2GRAY)
+
+    rects = detector(gray, 1)
+
+    for (i, rect) in enumerate(rects):
+
+        shape = predictor(gray, rect)
+        shape = face_utils.shape_to_np(shape)
+
+        ratio = turn_aspect_ratio(shape[1], shape[28], shape[17])
+        lips_ratio = open_mouth_detection(shape[62], shape[66], shape[49], shape[59])
+        if lips_ratio>0.32:
+            event2 = "mouth open"
+        else:
+            event2 = "mouth close"
+        
+        cv2.line(rname, tuple(shape[66]), (180, 42, 220), 2)
+        cv2.line(rname, tuple(shape[59]), (180, 42, 220), 2)
+        cv2.line(rname, tuple(shape[28]), (19, 199, 109), 2)
+        cv2.line(rname, tuple(shape[17]), (19, 199, 108), 2)
+
+        if ratio < 0.6:
+            event = "right turn"
+        elif ratio > 1.6:
+            event = "left turn"
+        else:
+            event = "none"        
+        
+        (x, y, w, h) = face_utils.rect_to_bb(rect)
+        cv2.rectangle(rname, (x, y), (x+w, y+h), (0, 255, 0), 2)
+
+        cv2.putText(rname, "Face #{}".format(i + 1), (x-10, y-10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
+        cv2.putText(rname, "Ratio: {}--{}".format(event, event2), (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
+
+        for (x, y) in shape:
+            cv2.circle(rname, (x, y), 1, (0, 0, 255), -1)
+
+    cv2.imshow("frame", rname)
+    if cv2.waitKey(1) & 0xFF == ord('q'):
+        breakh
+
+cap.release()
+cv2.destroyAllWindows()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
