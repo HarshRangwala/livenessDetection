@@ -16,3 +16,13 @@ classifications on it.
 Future work
 I have to create a program that takes real time input from
 web camera and compare the results. 
+
+=================================================================
+main.py
+Created: Sept 21
+uploaded: October 13
+
+This file is the main file of the whole facial recognition
+system. This file currently detects person. Its a refined version 
+of PersonDetection.py .
+

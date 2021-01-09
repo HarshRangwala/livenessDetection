@@ -122,7 +122,7 @@ def draw(photo):
         if iris_circles is not None:
             circle=iris_circles[0][0]
             cv2.circle(iris_circles_image, (circle[0], circle[1]), circle[2], (255,0,0), thickness=2)
-        pupil_coords = pupil_detect.find_pupil(iris_gray)
+        pupil_coords = detect_pupils.find_pupil(iris_gray)
         if pupil_coords is not None:
             cv2.circle(iris_circles_image, pupil_coords[:2], pupil_coords[2], (0,255,0),4)
         if iris_circles is not None and pupil_coords is not None:

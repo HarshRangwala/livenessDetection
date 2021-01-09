@@ -82,6 +82,7 @@ while(True):
     	# 0.6 right and 1.6 left threshold
     	ratio = turn_aspect_ratio(shape[1],shape[28],shape[17])
     	lips_ratio = open_mouth_detection(shape[62],shape[66],shape[49],shape[59])
+        
     	if lips_ratio>0.32:
     		event2="Mouth Open"
     	else :
